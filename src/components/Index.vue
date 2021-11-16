@@ -30,7 +30,10 @@
             >
             </el-option>
           </el-select>
-          <el-button :disabled="!branch && running" @click="autoBuildReact" type="primary"
+          <el-button
+            :disabled="!branch && running"
+            @click="autoBuildReact"
+            type="primary"
             >build</el-button
           >
         </el-col>
@@ -67,9 +70,9 @@
 </template>
 
 <script>
-import { buildVue, buildReact } from "../api/index";
-const vueBranch = ["dev_7.2.0.0"];
-const reactBranch = ["dev_7.2.0.0"];
+import { buildVue, buildReact, execCommand } from "../api/index";
+let vueBranch = ["dev_7.2.0.0"];
+let reactBranch = ["dev_7.2.0.0"];
 export default {
   name: "Index",
   data() {
@@ -77,7 +80,7 @@ export default {
       running: false,
       type: "react",
       typeList: ["react", "vue"],
-      branch: "dev_7.2.0.0",
+      branch: "",
       branchList: reactBranch,
       progress: [
         { percentage: 0, colors: "#f56c6c" },
@@ -91,7 +94,7 @@ export default {
         },
         {
           title: "本地代码拉取远端代码",
-          describe: "git merge upstream/dev_7.2.0.0",
+          describe: "git merge upstream/${branch}",
         },
         {
           title: "打包压缩",
@@ -127,7 +130,7 @@ export default {
     },
     autoBuildVue() {
       this.running = true;
-      buildVue({ branch: this.branch })
+      buildVue({ target: this.branch })
         .then((res) => {
           this.download(res.data);
           this.running = false;
@@ -136,7 +139,7 @@ export default {
     },
     autoBuildReact() {
       this.running = true;
-      buildReact({ branch: this.branch })
+      buildReact({ target: this.branch })
         .then((res) => {
           this.download(res.data);
           this.running = false;
@@ -152,6 +155,9 @@ export default {
           this.autoBuildReact();
           break;
       }
+    },
+    executeCommand(command, env, callBack) {
+      execCommand({ command, env }).then((res) => callBack(res));
     },
   },
   mounted() {
@@ -184,6 +190,26 @@ export default {
         }
       };
     }
+    this.executeCommand("git branch -r --list", "react", (res) => {
+      console.log(res.data);
+      const branchStr = res.data
+        .replace(/[\r\n]/g, "")
+        .trim()
+        .replace(/\s+/g, " ");
+      const branchArr = branchStr.split(" ");
+      reactBranch = branchArr.filter((item) => item.startsWith("upstream"));
+      this.typeChange(this.type);
+    });
+    this.executeCommand("git branch -r --list", "vue", (res) => {
+      console.log(res.data);
+      const branchStr = res.data
+        .replace(/[\r\n]/g, "")
+        .trim()
+        .replace(/\s+/g, " ");
+      const branchArr = branchStr.split(" ");
+      vueBranch = branchArr.filter((item) => item.startsWith("upstream"));
+      this.typeChange(this.type);
+    });
   },
 };
 </script>
