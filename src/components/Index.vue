@@ -21,6 +21,7 @@
             v-model="branch"
             placeholder="请选择打包分支"
             class="mr-10"
+            filterable
           >
             <el-option
               v-for="item in branchList"
@@ -30,10 +31,7 @@
             >
             </el-option>
           </el-select>
-          <el-button
-            :disabled="!branch && running"
-            @click="autoBuildReact"
-            type="primary"
+          <el-button :disabled="running" @click="autoBuildReact" type="primary"
             >build</el-button
           >
         </el-col>
@@ -71,8 +69,8 @@
 
 <script>
 import { buildVue, buildReact, execCommand } from "../api/index";
-let vueBranch = ["dev_7.2.0.0"];
-let reactBranch = ["dev_7.2.0.0"];
+let vueBranch = [];
+let reactBranch = [];
 export default {
   name: "Index",
   data() {
@@ -129,6 +127,10 @@ export default {
       document.body.removeChild(link);
     },
     autoBuildVue() {
+      if (!this.branch) {
+        this.$message.error("笑死人 分支不选打什么包");
+        return;
+      }
       this.running = true;
       buildVue({ target: this.branch })
         .then((res) => {
@@ -138,6 +140,10 @@ export default {
         .catch(() => {});
     },
     autoBuildReact() {
+      if (!this.branch) {
+        this.$message.error("笑死人 分支不选打什么包");
+        return;
+      }
       this.running = true;
       buildReact({ target: this.branch })
         .then((res) => {
@@ -194,20 +200,20 @@ export default {
       console.log(res.data);
       const branchStr = res.data
         .replace(/[\r\n]/g, "")
+        .replace("origin/HEAD -> origin/master", "")
         .trim()
         .replace(/\s+/g, " ");
-      const branchArr = branchStr.split(" ");
-      reactBranch = branchArr.filter((item) => item.startsWith("upstream"));
+      reactBranch = branchStr.split(" ");
       this.typeChange(this.type);
     });
     this.executeCommand("git branch -r --list", "vue", (res) => {
       console.log(res.data);
       const branchStr = res.data
         .replace(/[\r\n]/g, "")
+        .replace("origin/HEAD -> origin/master", "")
         .trim()
         .replace(/\s+/g, " ");
-      const branchArr = branchStr.split(" ");
-      vueBranch = branchArr.filter((item) => item.startsWith("upstream"));
+      vueBranch = branchStr.split(" ");
       this.typeChange(this.type);
     });
   },
