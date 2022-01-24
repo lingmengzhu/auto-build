@@ -128,7 +128,7 @@ export default {
     },
     autoBuildVue() {
       if (!this.branch) {
-        this.$message.error("笑死人 分支不选打什么包");
+        this.$message.error("请选择分支");
         return;
       }
       this.running = true;
@@ -141,7 +141,7 @@ export default {
     },
     autoBuildReact() {
       if (!this.branch) {
-        this.$message.error("笑死人 分支不选打什么包");
+        this.$message.error("请选择分支");
         return;
       }
       this.running = true;
